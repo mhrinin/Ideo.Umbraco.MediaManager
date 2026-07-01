@@ -2,18 +2,21 @@ using Ideo.Umbraco.MediaManager.Interfaces;
 using Ideo.Umbraco.MediaManager.Models;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Models;
-using Umbraco.Cms.Core.PropertyEditors;
+using Umbraco.Cms.Core.Models.Entities;
 using Umbraco.Cms.Core.Services;
-using UmbracoConstants = Umbraco.Cms.Core.Constants;
 
 namespace Ideo.Umbraco.MediaManager.Services;
 
+/// <summary>
+/// Finds physical files on the media filesystem that no media node owns. Owned paths are collected
+/// from lightweight <see cref="IMediaEntitySlim"/> rows (including the recycle bin, whose files are
+/// still on disk), so no full media entities are hydrated.
+/// </summary>
 public sealed class OrphanedFileScanner(
     MediaFileManager mediaFileManager,
-    MediaUrlGeneratorCollection mediaUrlGenerators,
-    IMediaService mediaService) : IOrphanedFileScanner
+    IEntityService entityService) : IOrphanedFileScanner
 {
-    private const int PageSize = 100;
+    private const int PageSize = 500;
 
     public Task<IReadOnlyList<FileCandidate>> ScanAsync(IProgress<int>? progress, CancellationToken cancellationToken)
     {
@@ -45,11 +48,22 @@ public sealed class OrphanedFileScanner(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var page = mediaService.GetPagedDescendants(UmbracoConstants.System.Root, pageIndex, PageSize, out total);
+            var page = entityService.GetPagedDescendants(
+                UmbracoObjectTypes.Media,
+                pageIndex,
+                PageSize,
+                out total,
+                filter: null,
+                ordering: null,
+                includeTrashed: true);
 
-            foreach (var media in page)
+            foreach (var entity in page)
             {
-                AddOwnedPaths(media, owned);
+                if (entity is IMediaEntitySlim media && !string.IsNullOrEmpty(media.MediaPath))
+                {
+                    owned.Add(MediaScanLogic.NormalizeMediaPath(media.MediaPath));
+                }
+
                 processed++;
             }
 
@@ -59,19 +73,6 @@ public sealed class OrphanedFileScanner(
         while (pageIndex * PageSize < total);
 
         return owned;
-    }
-
-    private void AddOwnedPaths(IContentBase media, HashSet<string> owned)
-    {
-        foreach (var property in media.Properties)
-        {
-            var value = property.GetValue();
-            if (mediaUrlGenerators.TryGetMediaPath(property.PropertyType.PropertyEditorAlias, value, out var mediaPath)
-                && !string.IsNullOrEmpty(mediaPath))
-            {
-                owned.Add(MediaScanLogic.NormalizeMediaPath(mediaPath));
-            }
-        }
     }
 
     private static IEnumerable<string> WalkFiles(IFileSystem fileSystem, string path, CancellationToken cancellationToken)

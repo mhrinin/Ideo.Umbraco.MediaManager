@@ -1,23 +1,29 @@
 using Ideo.Umbraco.MediaManager.Interfaces;
 using Ideo.Umbraco.MediaManager.Models;
+using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Models;
-using Umbraco.Cms.Core.PropertyEditors;
+using Umbraco.Cms.Core.Models.Entities;
 using Umbraco.Cms.Core.Services;
-using Umbraco.Extensions;
 using UmbracoConstants = Umbraco.Cms.Core.Constants;
 
 namespace Ideo.Umbraco.MediaManager.Services;
 
+/// <summary>
+/// Finds media nodes that nothing references. For performance it pages lightweight
+/// <see cref="IMediaEntitySlim"/> rows via <see cref="IEntityService"/> (no property hydration),
+/// excludes the recycle bin at the query level, and only reads file sizes for the orphan set.
+/// </summary>
 public sealed class OrphanedMediaScanner(
-    IMediaService mediaService,
+    IEntityService entityService,
     IRelationService relationService,
-    MediaUrlGeneratorCollection mediaUrlGenerators) : IOrphanedMediaScanner
+    MediaFileManager mediaFileManager) : IOrphanedMediaScanner
 {
-    private const int PageSize = 100;
+    private const int PageSize = 500;
 
     public Task<IReadOnlyList<MediaCandidate>> ScanAsync(IProgress<int>? progress, CancellationToken cancellationToken)
     {
         var referencedIds = GetReferencedMediaIds();
+        var fileSystem = mediaFileManager.FileSystem;
 
         var candidates = new List<MediaCandidate>();
         long pageIndex = 0;
@@ -28,26 +34,35 @@ public sealed class OrphanedMediaScanner(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var page = mediaService.GetPagedDescendants(UmbracoConstants.System.Root, pageIndex, PageSize, out total);
+            var page = entityService.GetPagedDescendants(
+                UmbracoObjectTypes.Media,
+                pageIndex,
+                PageSize,
+                out total,
+                filter: null,
+                ordering: null,
+                includeTrashed: false);
 
-            foreach (var media in page)
+            foreach (var entity in page)
             {
-                // Only files carry an umbracoFile value; skip folders (handled by a separate feature).
-                var path = media.GetValue<string>(UmbracoConstants.Conventions.Media.File);
-                if (string.IsNullOrEmpty(path))
+                // Only file-backed media are candidates; skip folders and non-media rows.
+                if (entity is not IMediaEntitySlim media || string.IsNullOrEmpty(media.MediaPath))
                 {
                     continue;
                 }
 
                 processed++;
 
-                if (!MediaScanLogic.IsOrphanMedia(media.Id, path, media.Trashed, referencedIds))
+                if (!MediaScanLogic.IsOrphanMedia(media.Id, media.MediaPath, media.Trashed, referencedIds))
                 {
                     continue;
                 }
 
-                var size = media.GetValue<long?>(UmbracoConstants.Conventions.Media.Bytes) ?? 0;
-                candidates.Add(new MediaCandidate(media.Key, media.Name ?? string.Empty, ResolvePath(media) ?? path, size));
+                candidates.Add(new MediaCandidate(
+                    media.Key,
+                    media.Name ?? string.Empty,
+                    media.MediaPath,
+                    GetSize(fileSystem, media.MediaPath)));
             }
 
             progress?.Report(processed);
@@ -58,25 +73,24 @@ public sealed class OrphanedMediaScanner(
         return Task.FromResult<IReadOnlyList<MediaCandidate>>(candidates);
     }
 
-    private string? ResolvePath(IContentBase media)
-    {
-        foreach (var property in media.Properties)
-        {
-            if (mediaUrlGenerators.TryGetMediaPath(property.PropertyType.PropertyEditorAlias, property.GetValue(), out var mediaPath)
-                && !string.IsNullOrEmpty(mediaPath))
-            {
-                return mediaPath;
-            }
-        }
-
-        return null;
-    }
-
     private HashSet<int> GetReferencedMediaIds()
     {
         var relations = relationService.GetByRelationTypeAlias(UmbracoConstants.Conventions.RelationTypes.RelatedMediaAlias)
             ?? [];
 
         return relations.Select(relation => relation.ChildId).ToHashSet();
+    }
+
+    private static long GetSize(IFileSystem fileSystem, string mediaPath)
+    {
+        try
+        {
+            var relativePath = fileSystem.GetRelativePath(mediaPath);
+            return fileSystem.FileExists(relativePath) ? fileSystem.GetSize(relativePath) : 0;
+        }
+        catch
+        {
+            return 0;
+        }
     }
 }
