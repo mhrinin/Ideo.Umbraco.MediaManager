@@ -53,7 +53,7 @@
     App_Plugins assets. Runs only in Release (CI/pack); local Debug builds skip it so
     day-to-day dev builds stay fast (build the Client manually with `npm run build`).
   -->
-  <Target Name="BuildClientAssets" BeforeTargets="AssignTargetPaths" Condition="'$(Configuration)' == 'Release' and Exists('Client\package.json')">
+  <Target Name="BuildClientAssets" BeforeTargets="AssignTargetPaths" Condition="'$(Configuration)' == 'Release' and '$(SkipClientBuild)' != 'true' and Exists('Client\package.json')">
     <Message Importance="high" Text="Building MediaManager frontend (npm ci + build)..." />
     <Exec Command="npm ci" WorkingDirectory="Client" />
     <Exec Command="npm run build" WorkingDirectory="Client" />

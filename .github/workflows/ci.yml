@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: src/Ideo.Umbraco.MediaManager/Client/package-lock.json
+
+      - name: Build frontend
+        working-directory: src/Ideo.Umbraco.MediaManager/Client
+        run: |
+          npm ci
+          npm run build
+
+      - name: Restore
+        run: dotnet restore Ideo.Umbraco.MediaManager.slnx
+
+      - name: Build
+        run: dotnet build Ideo.Umbraco.MediaManager.slnx -c Release --no-restore -p:SkipClientBuild=true
+
+      - name: Test
+        run: dotnet test Ideo.Umbraco.MediaManager.slnx -c Release --no-build --verbosity normal
