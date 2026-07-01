@@ -1,14 +1,16 @@
-import { css, html, property, customElement } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, nothing, property, customElement } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 
 /**
- * Presentational stat card (atom): an icon, a label and a headline value, with a loading state.
+ * Presentational stat card (atom): an icon, a label, a headline value and a short description,
+ * with a loading state.
  */
 @customElement("media-manager-stat-card")
 export class MediaManagerStatCardElement extends UmbLitElement {
   @property() icon = "";
   @property() label = "";
   @property() value = "";
+  @property() description = "";
   @property({ type: Boolean }) loading = false;
 
   override render() {
@@ -21,6 +23,9 @@ export class MediaManagerStatCardElement extends UmbLitElement {
           <uui-icon name=${this.icon}></uui-icon>
           <span>${this.label}</span>
         </div>
+        ${this.description
+          ? html`<div class="description">${this.description}</div>`
+          : nothing}
       </uui-box>
     `;
   }
@@ -44,7 +49,13 @@ export class MediaManagerStatCardElement extends UmbLitElement {
         align-items: center;
         gap: var(--uui-size-space-2);
         margin-top: var(--uui-size-space-2);
+        font-weight: 600;
+      }
+      .description {
+        margin-top: var(--uui-size-space-1);
         color: var(--uui-color-text-alt);
+        font-size: var(--uui-type-small-size, 0.8rem);
+        line-height: 1.3;
       }
     `,
   ];

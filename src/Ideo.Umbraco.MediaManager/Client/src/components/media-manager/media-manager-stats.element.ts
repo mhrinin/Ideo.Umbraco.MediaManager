@@ -9,6 +9,7 @@ interface Stat {
   icon: string;
   label: string;
   value: string;
+  description: string;
   loading: boolean;
 }
 
@@ -35,12 +36,14 @@ export class MediaManagerStatsElement extends UmbLitElement {
         icon: "icon-picture",
         label: "Orphaned media",
         value: `${media?.result?.media.length ?? 0}`,
+        description: "Media not referenced by any content.",
         loading: media?.state === "scanning",
       },
       {
         icon: "icon-document",
         label: "Orphaned files",
         value: `${files?.result?.files.length ?? 0}`,
+        description: "Files on disk with no matching media item.",
         loading: files?.state === "scanning",
       },
       {
@@ -49,6 +52,7 @@ export class MediaManagerStatsElement extends UmbLitElement {
         value: formatBytes(
           (media?.result?.reclaimableBytes ?? 0) + (files?.result?.reclaimableBytes ?? 0),
         ),
+        description: "Disk space recovered by cleaning these up.",
         loading: scanning,
       },
     ];
@@ -63,6 +67,7 @@ export class MediaManagerStatsElement extends UmbLitElement {
               icon=${stat.icon}
               label=${stat.label}
               value=${stat.value}
+              description=${stat.description}
               ?loading=${stat.loading}
             ></media-manager-stat-card>
           `,

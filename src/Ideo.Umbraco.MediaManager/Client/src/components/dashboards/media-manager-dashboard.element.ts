@@ -42,12 +42,6 @@ export class MediaManagerDashboardElement extends UmbLitElement {
     );
   }
 
-  #description(type: ScanType): string {
-    return type === "OrphanedMedia"
-      ? "Media not referenced by any content."
-      : "Files on disk with no matching media item.";
-  }
-
   #count(type: ScanType): number | undefined {
     const slice = this._slices?.[type];
     if (slice?.state !== "done") {
@@ -97,13 +91,10 @@ export class MediaManagerDashboardElement extends UmbLitElement {
 
         <media-manager-stats></media-manager-stats>
 
-        <div class="tabs">
-          <uui-tab-group>
-            ${this.#renderTab("OrphanedMedia", "Orphaned media")}
-            ${this.#renderTab("OrphanedFiles", "Orphaned files")}
-          </uui-tab-group>
-          <p class="hint">${this.#description(this._activeTab)}</p>
-        </div>
+        <uui-tab-group>
+          ${this.#renderTab("OrphanedMedia", "Orphaned media")}
+          ${this.#renderTab("OrphanedFiles", "Orphaned files")}
+        </uui-tab-group>
 
         <media-manager-results></media-manager-results>
       </div>
@@ -145,18 +136,8 @@ export class MediaManagerDashboardElement extends UmbLitElement {
         line-height: 1.4;
         max-width: 60ch;
       }
-      .tabs {
-        display: flex;
-        flex-direction: column;
-        gap: var(--uui-size-space-2);
-      }
       uui-tab-group {
         --uui-tab-divider: var(--uui-color-divider);
-      }
-      .hint {
-        margin: 0;
-        color: var(--uui-color-text-alt);
-        font-size: var(--uui-type-small-size, 0.8rem);
       }
       .tab-label {
         display: inline-flex;
