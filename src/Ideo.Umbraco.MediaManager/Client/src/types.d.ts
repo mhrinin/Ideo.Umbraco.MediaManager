@@ -1,5 +1,7 @@
 export type ScanType = "OrphanedMedia" | "OrphanedFiles" | "BrokenMedia";
 
+export type MediaManagerTab = ScanType | "StorageReport";
+
 export type ScanState =
   | "Queued"
   | "Running"
@@ -44,4 +46,18 @@ export interface ScanResult {
 export interface CleanupResult {
   affected: number;
   errors: string[];
+}
+
+export interface StorageTypeBreakdown {
+  typeAlias: string;
+  icon: string;
+  count: number;
+  bytes: number;
+}
+
+export interface StorageReport {
+  totalBytes: number;
+  totalCount: number;
+  byType: StorageTypeBreakdown[];
+  largest: MediaCandidate[];
 }

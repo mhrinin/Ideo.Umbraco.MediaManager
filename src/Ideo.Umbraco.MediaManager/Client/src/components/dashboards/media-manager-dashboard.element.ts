@@ -9,16 +9,17 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { MediaManagerContext } from "../../context/media-manager.context.js";
 import { MEDIA_MANAGER_CONTEXT } from "../../context/media-manager.context-token.js";
 import type { Slices } from "../../context/media-manager.context.js";
-import type { ScanType } from "../../types.d.js";
+import type { MediaManagerTab, ScanType } from "../../types.d.js";
 import "../media-manager/media-manager-stats.element.js";
 import "../media-manager/media-manager-results.element.js";
+import "../media-manager/media-manager-report.element.js";
 
 @customElement("media-manager-dashboard")
 export class MediaManagerDashboardElement extends UmbLitElement {
   #context = new MediaManagerContext(this);
 
   @state() private _slices?: Slices;
-  @state() private _activeTab: ScanType = "OrphanedMedia";
+  @state() private _activeTab: MediaManagerTab = "OrphanedMedia";
 
   constructor() {
     super();
@@ -42,7 +43,10 @@ export class MediaManagerDashboardElement extends UmbLitElement {
     );
   }
 
-  #count(type: ScanType): number | undefined {
+  #count(type: MediaManagerTab): number | undefined {
+    if (type === "StorageReport") {
+      return undefined;
+    }
     const slice = this._slices?.[type];
     if (slice?.state !== "done") {
       return undefined;
@@ -52,7 +56,7 @@ export class MediaManagerDashboardElement extends UmbLitElement {
       : slice.result?.media.length ?? 0;
   }
 
-  #renderTab(type: ScanType, label: string) {
+  #renderTab(type: MediaManagerTab, label: string) {
     const count = this.#count(type);
     return html`
       <uui-tab
@@ -95,9 +99,12 @@ export class MediaManagerDashboardElement extends UmbLitElement {
           ${this.#renderTab("OrphanedMedia", "Orphaned media")}
           ${this.#renderTab("BrokenMedia", "Broken media")}
           ${this.#renderTab("OrphanedFiles", "Orphaned files")}
+          ${this.#renderTab("StorageReport", "Storage report")}
         </uui-tab-group>
 
-        <media-manager-results></media-manager-results>
+        ${this._activeTab === "StorageReport"
+          ? html`<media-manager-report></media-manager-report>`
+          : html`<media-manager-results></media-manager-results>`}
       </div>
     `;
   }

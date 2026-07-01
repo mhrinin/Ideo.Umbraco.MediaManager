@@ -57,7 +57,7 @@ export class MediaManagerResultsElement extends UmbLitElement {
     this.consumeContext(MEDIA_MANAGER_CONTEXT, (context) => {
       this.#context = context;
       this.observe(context?.activeTab, (tab) => {
-        if (tab) {
+        if (tab && tab !== "StorageReport") {
           this._activeTab = tab;
         }
       });

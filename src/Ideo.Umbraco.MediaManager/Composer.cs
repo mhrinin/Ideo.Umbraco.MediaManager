@@ -14,6 +14,7 @@ public class Composer : IComposer
         builder.Services.AddScoped<IOrphanedFileScanner, OrphanedFileScanner>();
         builder.Services.AddScoped<IBrokenMediaScanner, BrokenMediaScanner>();
         builder.Services.AddScoped<ICleanupService, CleanupService>();
+        builder.Services.AddScoped<IStorageReportService, StorageReportService>();
 
         builder.Services.AddSingleton<ScanJobManager>();
         builder.Services.AddSingleton<IScanJobManager>(provider => provider.GetRequiredService<ScanJobManager>());

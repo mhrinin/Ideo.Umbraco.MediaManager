@@ -10,6 +10,8 @@
   <ItemGroup>
     <PackageReference Include="Umbraco.Cms" Version="17.5.1"/>
     <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="17.5.1"/>
+    <!-- Sample content + media for local testing (referenced media, real image sizes, etc.). -->
+    <PackageReference Include="Umbraco.TheStarterKit" Version="17.0.0"/>
   </ItemGroup>
 
   <ItemGroup>

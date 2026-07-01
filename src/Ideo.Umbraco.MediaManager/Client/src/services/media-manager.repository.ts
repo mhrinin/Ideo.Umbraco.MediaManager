@@ -7,6 +7,7 @@ import type {
   ScanResult,
   ScanType,
   StartScanResponse,
+  StorageReport,
 } from "../types.d.js";
 
 const BEARER = [{ scheme: "bearer", type: "http" }] as const;
@@ -57,6 +58,18 @@ export class MediaManagerRepository {
       umbHttpClient.post<CleanupResult>({
         url: `${this.apiBaseUrl}/cleanup/media`,
         body: { keys, dryRun },
+        security: [...BEARER],
+      }),
+    );
+    if (error) throw error;
+    return data ?? null;
+  }
+
+  async getStorageReport(): Promise<StorageReport | null> {
+    const { data, error } = await tryExecute(
+      this.host,
+      umbHttpClient.get<StorageReport>({
+        url: `${this.apiBaseUrl}/report/storage`,
         security: [...BEARER],
       }),
     );

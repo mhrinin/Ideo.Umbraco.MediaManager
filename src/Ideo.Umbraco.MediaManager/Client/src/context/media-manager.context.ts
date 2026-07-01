@@ -4,7 +4,12 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import type { UmbNotificationContext } from "@umbraco-cms/backoffice/notification";
 import { MediaManagerRepository } from "../services/media-manager.repository.js";
-import type { ScanResult, ScanType } from "../types.d.js";
+import type {
+  MediaManagerTab,
+  ScanResult,
+  ScanType,
+  StorageReport,
+} from "../types.d.js";
 
 export type ScanState = "idle" | "scanning" | "done" | "failed";
 
@@ -16,6 +21,13 @@ export interface ScanSlice {
 }
 
 export type Slices = Record<ScanType, ScanSlice>;
+
+export type ReportState = "idle" | "loading" | "done" | "failed";
+
+export interface ReportSlice {
+  state: ReportState;
+  result?: StorageReport;
+}
 
 const emptySlice = (): ScanSlice => ({ state: "idle", processed: 0, selected: [] });
 
@@ -31,10 +43,12 @@ export class MediaManagerContext extends UmbControllerBase {
     OrphanedFiles: emptySlice(),
     BrokenMedia: emptySlice(),
   });
-  #activeTab = new UmbObjectState<ScanType>("OrphanedMedia");
+  #activeTab = new UmbObjectState<MediaManagerTab>("OrphanedMedia");
+  #report = new UmbObjectState<ReportSlice>({ state: "idle" });
 
   readonly slices = this.#slices.asObservable();
   readonly activeTab = this.#activeTab.asObservable();
+  readonly report = this.#report.asObservable();
 
   constructor(host: UmbControllerHost) {
     super(host, "Ideo.Umbraco.MediaManager.Context");
@@ -47,8 +61,25 @@ export class MediaManagerContext extends UmbControllerBase {
     return this.#slices.getValue();
   }
 
-  setActiveTab(type: ScanType): void {
-    this.#activeTab.setValue(type);
+  setActiveTab(tab: MediaManagerTab): void {
+    this.#activeTab.setValue(tab);
+  }
+
+  async loadReport(force = false): Promise<void> {
+    const current = this.#report.getValue();
+    if (!force && (current.state === "loading" || current.state === "done")) {
+      return;
+    }
+
+    this.#report.setValue({ state: "loading" });
+    try {
+      const result = (await this.#repository.getStorageReport()) ?? undefined;
+      this.#report.setValue({ state: "done", result });
+    } catch (error) {
+      this.#report.setValue({ state: "failed" });
+      this.#notification?.peek("danger", { data: { message: "Failed to generate the storage report." } });
+      console.error(error);
+    }
   }
 
   setSelection(type: ScanType, selected: string[]): void {
