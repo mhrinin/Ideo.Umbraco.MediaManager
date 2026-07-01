@@ -42,6 +42,7 @@ export class MediaManagerContext extends UmbControllerBase {
     UnusedMedia: emptySlice(),
     OrphanedFiles: emptySlice(),
     BrokenMedia: emptySlice(),
+    Duplicates: emptySlice(),
   });
   #activeTab = new UmbObjectState<MediaManagerTab>("UnusedMedia");
   #report = new UmbObjectState<ReportSlice>({ state: "idle" });
@@ -91,6 +92,7 @@ export class MediaManagerContext extends UmbControllerBase {
       this.scan("UnusedMedia"),
       this.scan("OrphanedFiles"),
       this.scan("BrokenMedia"),
+      this.scan("Duplicates"),
     ]);
   }
 

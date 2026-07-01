@@ -30,10 +30,12 @@ export class MediaManagerStatsElement extends UmbLitElement {
     const media = this._slices?.UnusedMedia;
     const files = this._slices?.OrphanedFiles;
     const broken = this._slices?.BrokenMedia;
+    const duplicates = this._slices?.Duplicates;
     const scanning =
       media?.state === "scanning" ||
       files?.state === "scanning" ||
-      broken?.state === "scanning";
+      broken?.state === "scanning" ||
+      duplicates?.state === "scanning";
 
     return [
       {
@@ -42,6 +44,13 @@ export class MediaManagerStatsElement extends UmbLitElement {
         value: `${media?.result?.media.length ?? 0}`,
         description: "Media not referenced by any content.",
         loading: media?.state === "scanning",
+      },
+      {
+        icon: "icon-documents",
+        label: "Duplicates",
+        value: `${duplicates?.result?.media.length ?? 0}`,
+        description: "Redundant copies of identical files.",
+        loading: duplicates?.state === "scanning",
       },
       {
         icon: "icon-alert",
@@ -61,7 +70,9 @@ export class MediaManagerStatsElement extends UmbLitElement {
         icon: "icon-trash",
         label: "Reclaimable space",
         value: formatBytes(
-          (media?.result?.reclaimableBytes ?? 0) + (files?.result?.reclaimableBytes ?? 0),
+          (media?.result?.reclaimableBytes ?? 0) +
+            (files?.result?.reclaimableBytes ?? 0) +
+            (duplicates?.result?.reclaimableBytes ?? 0),
         ),
         description: "Disk space recovered by cleaning these up.",
         loading: scanning,

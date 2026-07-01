@@ -5,4 +5,5 @@ public enum ScanType
     UnusedMedia,
     OrphanedFiles,
     BrokenMedia,
+    Duplicates,
 }

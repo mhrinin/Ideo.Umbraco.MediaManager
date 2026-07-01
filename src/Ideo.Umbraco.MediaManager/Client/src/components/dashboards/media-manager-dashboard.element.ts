@@ -97,6 +97,7 @@ export class MediaManagerDashboardElement extends UmbLitElement {
 
         <uui-tab-group>
           ${this.#renderTab("UnusedMedia", "Unused media")}
+          ${this.#renderTab("Duplicates", "Duplicates")}
           ${this.#renderTab("BrokenMedia", "Broken media")}
           ${this.#renderTab("OrphanedFiles", "Orphaned files")}
           ${this.#renderTab("StorageReport", "Storage report")}
