@@ -1,5 +1,7 @@
 using Ideo.Umbraco.MediaManager.Interfaces;
 using Ideo.Umbraco.MediaManager.Models;
+using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Extensions;
 using UmbracoConstants = Umbraco.Cms.Core.Constants;
@@ -8,7 +10,8 @@ namespace Ideo.Umbraco.MediaManager.Services;
 
 public sealed class OrphanedMediaScanner(
     IMediaService mediaService,
-    IRelationService relationService) : IOrphanedMediaScanner
+    IRelationService relationService,
+    MediaUrlGeneratorCollection mediaUrlGenerators) : IOrphanedMediaScanner
 {
     private const int PageSize = 100;
 
@@ -38,13 +41,13 @@ public sealed class OrphanedMediaScanner(
 
                 processed++;
 
-                if (!MediaScanLogic.IsOrphanMedia(media.Id, path, referencedIds))
+                if (!MediaScanLogic.IsOrphanMedia(media.Id, path, media.Trashed, referencedIds))
                 {
                     continue;
                 }
 
                 var size = media.GetValue<long?>(UmbracoConstants.Conventions.Media.Bytes) ?? 0;
-                candidates.Add(new MediaCandidate(media.Key, media.Name ?? string.Empty, path, size));
+                candidates.Add(new MediaCandidate(media.Key, media.Name ?? string.Empty, ResolvePath(media) ?? path, size));
             }
 
             progress?.Report(processed);
@@ -53,6 +56,20 @@ public sealed class OrphanedMediaScanner(
         while (pageIndex * PageSize < total);
 
         return Task.FromResult<IReadOnlyList<MediaCandidate>>(candidates);
+    }
+
+    private string? ResolvePath(IContentBase media)
+    {
+        foreach (var property in media.Properties)
+        {
+            if (mediaUrlGenerators.TryGetMediaPath(property.PropertyType.PropertyEditorAlias, property.GetValue(), out var mediaPath)
+                && !string.IsNullOrEmpty(mediaPath))
+            {
+                return mediaPath;
+            }
+        }
+
+        return null;
     }
 
     private HashSet<int> GetReferencedMediaIds()

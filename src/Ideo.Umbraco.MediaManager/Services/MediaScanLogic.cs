@@ -8,9 +8,12 @@ public static class MediaScanLogic
 {
     public const string CacheDirectoryName = "cache";
 
-    /// <summary>A media node is orphaned when it holds a file (not a folder) and nothing references it.</summary>
-    public static bool IsOrphanMedia(int mediaId, string? filePath, ISet<int> referencedMediaIds)
-        => !string.IsNullOrEmpty(filePath) && !referencedMediaIds.Contains(mediaId);
+    /// <summary>
+    /// A media node is orphaned when it holds a file (not a folder), is not already in the recycle
+    /// bin, and nothing references it.
+    /// </summary>
+    public static bool IsOrphanMedia(int mediaId, string? filePath, bool trashed, ISet<int> referencedMediaIds)
+        => !trashed && !string.IsNullOrEmpty(filePath) && !referencedMediaIds.Contains(mediaId);
 
     /// <summary>Normalizes a media path for comparison: forward slashes, no leading slash or "media/" prefix, lower-cased.</summary>
     public static string NormalizeMediaPath(string path)

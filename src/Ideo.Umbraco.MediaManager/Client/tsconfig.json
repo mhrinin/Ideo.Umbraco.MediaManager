@@ -8,8 +8,11 @@
     "strict": true,
     "skipLibCheck": true,
     "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"]
+    "types": ["@umbraco-cms/backoffice/extension-types"]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src"]
 }

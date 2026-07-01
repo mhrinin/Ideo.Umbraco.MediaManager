@@ -9,7 +9,7 @@ public class MediaScanLogicTests
     {
         var referenced = new HashSet<int> { 200, 300 };
 
-        Assert.True(MediaScanLogic.IsOrphanMedia(100, "/media/abc/file.jpg", referenced));
+        Assert.True(MediaScanLogic.IsOrphanMedia(100, "/media/abc/file.jpg", trashed: false, referenced));
     }
 
     [Fact]
@@ -17,7 +17,14 @@ public class MediaScanLogicTests
     {
         var referenced = new HashSet<int> { 100, 200 };
 
-        Assert.False(MediaScanLogic.IsOrphanMedia(100, "/media/abc/file.jpg", referenced));
+        Assert.False(MediaScanLogic.IsOrphanMedia(100, "/media/abc/file.jpg", trashed: false, referenced));
+    }
+
+    [Fact]
+    public void IsOrphanMedia_Trashed_IsNotOrphan()
+    {
+        // Already in the recycle bin — must not be re-flagged.
+        Assert.False(MediaScanLogic.IsOrphanMedia(100, "/media/abc/file.jpg", trashed: true, new HashSet<int>()));
     }
 
     [Theory]
@@ -25,7 +32,7 @@ public class MediaScanLogicTests
     [InlineData("")]
     public void IsOrphanMedia_Folder_IsNotOrphan(string? filePath)
     {
-        Assert.False(MediaScanLogic.IsOrphanMedia(100, filePath, new HashSet<int>()));
+        Assert.False(MediaScanLogic.IsOrphanMedia(100, filePath, trashed: false, new HashSet<int>()));
     }
 
     [Theory]

@@ -1,12 +1,11 @@
-import type { UmbExtensionManifest } from "@umbraco-cms/backoffice/extension-api";
-
-const dashboards: Array<UmbExtensionManifest> = [
+export const manifests: Array<UmbExtensionManifest> = [
   {
     type: "dashboard",
     alias: "Ideo.Umbraco.MediaManager.Dashboard",
     name: "Media Manager Dashboard",
     element: () =>
       import("./components/dashboards/media-manager-dashboard.element.js"),
+    elementName: "media-manager-dashboard",
     weight: 10,
     meta: {
       label: "Media Manager",
@@ -19,6 +18,13 @@ const dashboards: Array<UmbExtensionManifest> = [
       },
     ],
   },
+  {
+    type: "localization",
+    alias: "Ideo.Umbraco.MediaManager.Localize.En",
+    name: "English",
+    meta: {
+      culture: "en",
+    },
+    js: () => import("./localization/en.js"),
+  },
 ];
-
-export const manifests: Array<UmbExtensionManifest> = [...dashboards];
