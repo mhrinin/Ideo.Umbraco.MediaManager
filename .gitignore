@@ -1,0 +1,41 @@
+# Build results
+**/[Bb]in/
+**/[Oo]bj/
+**/[Dd]ebug/
+**/[Rr]elease/
+*.user
+artifacts/
+
+# .NET
+*.dll
+*.pdb
+project.lock.json
+.vs/
+
+# Node / frontend
+**/node_modules/
+npm-debug.log*
+.eslintcache
+
+# Generated frontend build output (App_Plugins is emitted by vite)
+src/Ideo.Umbraco.MediaManager/wwwroot/App_Plugins/MediaManager/
+
+# Umbraco sample host runtime
+samples/**/umbraco/Data/
+samples/**/umbraco/Logs/
+samples/**/umbraco/mediacache/
+samples/**/wwwroot/media/
+*.sqlite
+*.sqlite-shp
+*.sqlite-wal
+*.mdf
+*.ldf
+
+# NuGet
+*.nupkg
+*.snupkg
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+*.swp

@@ -1,0 +1,29 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{json,js,ts,yml,yaml,css,html}]
+indent_size = 2
+
+[*.{csproj,props,targets,xml}]
+indent_size = 2
+
+[*.cs]
+# Namespaces
+csharp_style_namespace_declarations = file_scoped:warning
+# var / expression bodies
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = true:suggestion
+# null checks
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+# braces required
+csharp_prefer_braces = true:warning
+# this. preferences
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
