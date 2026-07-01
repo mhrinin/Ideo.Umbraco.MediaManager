@@ -2,7 +2,7 @@ namespace Ideo.Umbraco.MediaManager.Models;
 
 public enum ScanType
 {
-    OrphanedMedia,
+    UnusedMedia,
     OrphanedFiles,
     BrokenMedia,
 }

@@ -11,18 +11,23 @@ namespace Ideo.Umbraco.MediaManager.Services;
 /// <summary>
 /// Finds media nodes that nothing references. For performance it pages lightweight
 /// <see cref="IMediaEntitySlim"/> rows via <see cref="IEntityService"/> (no property hydration),
-/// excludes the recycle bin at the query level, and only reads file sizes for the orphan set.
+/// excludes the recycle bin at the query level, and only reads file sizes for the unused set.
+/// A media node counts as used if either <see cref="IRelationService"/> (fast, published only) or the
+/// deep content scan (<see cref="IMediaReferenceCollector"/>, published + draft) reports a reference —
+/// the union avoids false positives on draft-heavy or freshly imported sites.
 /// </summary>
-public sealed class OrphanedMediaScanner(
+public sealed class UnusedMediaScanner(
     IEntityService entityService,
     IRelationService relationService,
-    MediaFileManager mediaFileManager) : IOrphanedMediaScanner
+    IMediaReferenceCollector referenceCollector,
+    MediaFileManager mediaFileManager) : IUnusedMediaScanner
 {
     private const int PageSize = 500;
 
     public Task<IReadOnlyList<MediaCandidate>> ScanAsync(IProgress<int>? progress, CancellationToken cancellationToken)
     {
         var referencedIds = GetReferencedMediaIds();
+        var referencedKeys = referenceCollector.Collect(cancellationToken);
         var fileSystem = mediaFileManager.FileSystem;
 
         var candidates = new List<MediaCandidate>();
@@ -53,7 +58,13 @@ public sealed class OrphanedMediaScanner(
 
                 processed++;
 
-                if (!MediaScanLogic.IsOrphanMedia(media.Id, media.MediaPath, media.Trashed, referencedIds))
+                if (!MediaScanLogic.IsUnusedMedia(media.Id, media.MediaPath, media.Trashed, referencedIds))
+                {
+                    continue;
+                }
+
+                // Deep-scan safety net: skip media referenced from any content value (published or draft).
+                if (referencedKeys.Contains(media.Key))
                 {
                     continue;
                 }

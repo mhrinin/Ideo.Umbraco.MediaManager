@@ -73,7 +73,7 @@ public sealed class ScanJobManager(
             using var scope = scopeFactory.CreateScope();
             var result = status.Type switch
             {
-                ScanType.OrphanedMedia => await RunMediaScanAsync(scope, jobId, progress, token),
+                ScanType.UnusedMedia => await RunMediaScanAsync(scope, jobId, progress, token),
                 ScanType.OrphanedFiles => await RunFileScanAsync(scope, jobId, progress, token),
                 ScanType.BrokenMedia => await RunBrokenMediaScanAsync(scope, jobId, progress, token),
                 _ => throw new NotSupportedException($"Unknown scan type {status.Type}."),
@@ -97,9 +97,9 @@ public sealed class ScanJobManager(
 
     private static async Task<ScanResult> RunMediaScanAsync(IServiceScope scope, Guid jobId, IProgress<int> progress, CancellationToken token)
     {
-        var scanner = scope.ServiceProvider.GetRequiredService<IOrphanedMediaScanner>();
+        var scanner = scope.ServiceProvider.GetRequiredService<IUnusedMediaScanner>();
         var media = await scanner.ScanAsync(progress, token);
-        return new ScanResult(jobId, ScanType.OrphanedMedia, media, [], media.Sum(candidate => candidate.SizeBytes));
+        return new ScanResult(jobId, ScanType.UnusedMedia, media, [], media.Sum(candidate => candidate.SizeBytes));
     }
 
     private static async Task<ScanResult> RunFileScanAsync(IServiceScope scope, Guid jobId, IProgress<int> progress, CancellationToken token)

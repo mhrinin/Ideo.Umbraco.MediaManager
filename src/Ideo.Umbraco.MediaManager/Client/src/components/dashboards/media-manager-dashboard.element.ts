@@ -19,7 +19,7 @@ export class MediaManagerDashboardElement extends UmbLitElement {
   #context = new MediaManagerContext(this);
 
   @state() private _slices?: Slices;
-  @state() private _activeTab: MediaManagerTab = "OrphanedMedia";
+  @state() private _activeTab: MediaManagerTab = "UnusedMedia";
 
   constructor() {
     super();
@@ -38,7 +38,7 @@ export class MediaManagerDashboardElement extends UmbLitElement {
 
   get #scanning(): boolean {
     return (
-      this._slices?.OrphanedMedia.state === "scanning" ||
+      this._slices?.UnusedMedia.state === "scanning" ||
       this._slices?.OrphanedFiles.state === "scanning"
     );
   }
@@ -96,7 +96,7 @@ export class MediaManagerDashboardElement extends UmbLitElement {
         <media-manager-stats></media-manager-stats>
 
         <uui-tab-group>
-          ${this.#renderTab("OrphanedMedia", "Orphaned media")}
+          ${this.#renderTab("UnusedMedia", "Unused media")}
           ${this.#renderTab("BrokenMedia", "Broken media")}
           ${this.#renderTab("OrphanedFiles", "Orphaned files")}
           ${this.#renderTab("StorageReport", "Storage report")}

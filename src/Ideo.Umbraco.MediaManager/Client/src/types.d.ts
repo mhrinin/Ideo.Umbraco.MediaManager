@@ -1,4 +1,4 @@
-export type ScanType = "OrphanedMedia" | "OrphanedFiles" | "BrokenMedia";
+export type ScanType = "UnusedMedia" | "OrphanedFiles" | "BrokenMedia";
 
 export type MediaManagerTab = ScanType | "StorageReport";
 

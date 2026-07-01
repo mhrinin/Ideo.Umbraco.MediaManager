@@ -27,7 +27,7 @@ export class MediaManagerStatsElement extends UmbLitElement {
   }
 
   get #stats(): Stat[] {
-    const media = this._slices?.OrphanedMedia;
+    const media = this._slices?.UnusedMedia;
     const files = this._slices?.OrphanedFiles;
     const broken = this._slices?.BrokenMedia;
     const scanning =
@@ -38,7 +38,7 @@ export class MediaManagerStatsElement extends UmbLitElement {
     return [
       {
         icon: "icon-picture",
-        label: "Orphaned media",
+        label: "Unused media",
         value: `${media?.result?.media.length ?? 0}`,
         description: "Media not referenced by any content.",
         loading: media?.state === "scanning",

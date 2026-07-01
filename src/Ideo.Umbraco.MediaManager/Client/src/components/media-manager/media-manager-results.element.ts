@@ -36,7 +36,7 @@ const FILE_COLUMNS: UmbTableColumn[] = [
 export class MediaManagerResultsElement extends UmbLitElement {
   #context?: MediaManagerContext;
 
-  @state() private _activeTab: ScanType = "OrphanedMedia";
+  @state() private _activeTab: ScanType = "UnusedMedia";
   @state() private _slice?: ScanSlice;
   @state() private _mediaEditBuilder?: ModalRouteBuilder;
 

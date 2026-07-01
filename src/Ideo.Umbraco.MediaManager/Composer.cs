@@ -10,7 +10,8 @@ public class Composer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.Services.AddScoped<IOrphanedMediaScanner, OrphanedMediaScanner>();
+        builder.Services.AddScoped<IMediaReferenceCollector, MediaReferenceCollector>();
+        builder.Services.AddScoped<IUnusedMediaScanner, UnusedMediaScanner>();
         builder.Services.AddScoped<IOrphanedFileScanner, OrphanedFileScanner>();
         builder.Services.AddScoped<IBrokenMediaScanner, BrokenMediaScanner>();
         builder.Services.AddScoped<ICleanupService, CleanupService>();

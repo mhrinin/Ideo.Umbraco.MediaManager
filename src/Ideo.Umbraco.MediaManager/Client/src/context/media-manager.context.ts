@@ -39,11 +39,11 @@ export class MediaManagerContext extends UmbControllerBase {
   #notification?: UmbNotificationContext;
 
   #slices = new UmbObjectState<Slices>({
-    OrphanedMedia: emptySlice(),
+    UnusedMedia: emptySlice(),
     OrphanedFiles: emptySlice(),
     BrokenMedia: emptySlice(),
   });
-  #activeTab = new UmbObjectState<MediaManagerTab>("OrphanedMedia");
+  #activeTab = new UmbObjectState<MediaManagerTab>("UnusedMedia");
   #report = new UmbObjectState<ReportSlice>({ state: "idle" });
 
   readonly slices = this.#slices.asObservable();
@@ -88,7 +88,7 @@ export class MediaManagerContext extends UmbControllerBase {
 
   async scanAll(): Promise<void> {
     await Promise.all([
-      this.scan("OrphanedMedia"),
+      this.scan("UnusedMedia"),
       this.scan("OrphanedFiles"),
       this.scan("BrokenMedia"),
     ]);

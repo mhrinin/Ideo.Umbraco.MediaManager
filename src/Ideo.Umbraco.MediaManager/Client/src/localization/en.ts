@@ -2,7 +2,7 @@ export default {
   mediaManager: {
     dashboardLabel: "Media Manager",
     scan: "Scan",
-    orphanedMedia: "Orphaned media",
+    unusedMedia: "Unused media",
     orphanedFiles: "Orphaned files",
   },
 };
