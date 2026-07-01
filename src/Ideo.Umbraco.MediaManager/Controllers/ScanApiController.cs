@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Ideo.Umbraco.MediaManager.Controllers;
 
 [ApiVersion("1.0")]
+[ApiExplorerSettings(GroupName = Constants.ApiName)]
 public class ScanApiController(IScanJobManager jobManager) : MediaManagerApiControllerBase
 {
     [HttpPost("scan")]
