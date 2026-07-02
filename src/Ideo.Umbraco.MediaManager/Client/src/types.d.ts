@@ -3,7 +3,8 @@ export type ScanType =
   | "OrphanedFiles"
   | "BrokenMedia"
   | "Duplicates"
-  | "StorageReport";
+  | "StorageReport"
+  | "Export";
 
 export type MediaManagerTab = ScanType;
 
@@ -46,6 +47,16 @@ export interface ScanResult {
   files: FileCandidate[];
   reclaimableBytes: number;
   report: StorageReport | null;
+  export: ExportInfo | null;
+}
+
+export interface ExportInfo {
+  fileCount: number;
+  zipSizeBytes: number;
+  createdUtc: string;
+  downloadToken: string;
+  errors: string[];
+  skippedCount: number;
 }
 
 export interface CleanupResult {

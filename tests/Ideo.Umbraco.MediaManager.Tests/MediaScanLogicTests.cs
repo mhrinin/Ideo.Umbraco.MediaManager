@@ -63,6 +63,16 @@ public class MediaScanLogicTests
     }
 
     [Theory]
+    [InlineData("1071/kitten.jpg", "1071/kitten.jpg")]
+    [InlineData("/1071/kitten.jpg", "1071/kitten.jpg")]
+    [InlineData("deep\\nested\\file.bin", "deep/nested/file.bin")]
+    [InlineData("\\lead\\file.png", "lead/file.png")]
+    public void ToZipEntryName_NormalizesToRelativeForwardSlashes(string input, string expected)
+    {
+        Assert.Equal(expected, MediaScanLogic.ToZipEntryName(input));
+    }
+
+    [Theory]
     [InlineData("cache", true)]
     [InlineData("1071/cache", true)]
     [InlineData("Cache/", true)]

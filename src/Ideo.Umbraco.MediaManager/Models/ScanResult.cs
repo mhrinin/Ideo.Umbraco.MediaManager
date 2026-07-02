@@ -6,4 +6,5 @@ public sealed record ScanResult(
     IReadOnlyList<MediaCandidate> Media,
     IReadOnlyList<FileCandidate> Files,
     long ReclaimableBytes,
-    StorageReport? Report = null);
+    StorageReport? Report = null,
+    ExportInfo? Export = null);

@@ -53,6 +53,13 @@ public static partial class MediaScanLogic
     public static bool IsUnusedMedia(int mediaId, string? filePath, bool trashed, ISet<int> referencedMediaIds)
         => !trashed && !string.IsNullOrEmpty(filePath) && !referencedMediaIds.Contains(mediaId);
 
+    /// <summary>
+    /// Normalizes a filesystem-relative path into a zip entry name: forward slashes, no leading
+    /// slash — so the extracted tree drops straight into a media root or bucket.
+    /// </summary>
+    public static string ToZipEntryName(string relativePath)
+        => relativePath.Replace('\\', '/').TrimStart('/');
+
     /// <summary>The ImageSharp/media cache directory holds regenerable variants and must never be treated as orphaned.</summary>
     public static bool IsCacheDirectory(string directory)
     {

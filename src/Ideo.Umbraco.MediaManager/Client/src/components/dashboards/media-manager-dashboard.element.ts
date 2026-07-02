@@ -13,6 +13,7 @@ import type { MediaManagerTab, ScanType } from "../../types.d.js";
 import "../media-manager/media-manager-stats.element.js";
 import "../media-manager/media-manager-results.element.js";
 import "../media-manager/media-manager-report.element.js";
+import "../media-manager/media-manager-export.element.js";
 
 @customElement("media-manager-dashboard")
 export class MediaManagerDashboardElement extends UmbLitElement {
@@ -41,7 +42,7 @@ export class MediaManagerDashboardElement extends UmbLitElement {
   }
 
   #count(type: MediaManagerTab): number | undefined {
-    if (type === "StorageReport") {
+    if (type === "StorageReport" || type === "Export") {
       return undefined;
     }
     const slice = this._slices?.[type];
@@ -51,6 +52,17 @@ export class MediaManagerDashboardElement extends UmbLitElement {
     return type === "OrphanedFiles"
       ? slice.result?.files.length ?? 0
       : slice.result?.media.length ?? 0;
+  }
+
+  #renderActivePanel() {
+    switch (this._activeTab) {
+      case "StorageReport":
+        return html`<media-manager-report></media-manager-report>`;
+      case "Export":
+        return html`<media-manager-export></media-manager-export>`;
+      default:
+        return html`<media-manager-results></media-manager-results>`;
+    }
   }
 
   #renderTab(type: MediaManagerTab, label: string) {
@@ -98,11 +110,10 @@ export class MediaManagerDashboardElement extends UmbLitElement {
           ${this.#renderTab("BrokenMedia", "Broken media")}
           ${this.#renderTab("OrphanedFiles", "Orphaned files")}
           ${this.#renderTab("StorageReport", "Storage report")}
+          ${this.#renderTab("Export", "Export")}
         </uui-tab-group>
 
-        ${this._activeTab === "StorageReport"
-          ? html`<media-manager-report></media-manager-report>`
-          : html`<media-manager-results></media-manager-results>`}
+        ${this.#renderActivePanel()}
       </div>
     `;
   }

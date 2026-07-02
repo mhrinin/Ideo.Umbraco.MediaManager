@@ -38,6 +38,7 @@ export class MediaManagerContext extends UmbControllerBase {
     BrokenMedia: emptySlice(),
     Duplicates: emptySlice(),
     StorageReport: emptySlice(),
+    Export: emptySlice(),
   });
   #activeTab = new UmbObjectState<MediaManagerTab>("UnusedMedia");
 

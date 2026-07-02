@@ -57,7 +57,8 @@ export class MediaManagerResultsElement extends UmbLitElement {
     this.consumeContext(MEDIA_MANAGER_CONTEXT, (context) => {
       this.#context = context;
       this.observe(context?.activeTab, (tab) => {
-        if (tab && tab !== "StorageReport") {
+        // Only cleanup tabs have result tables; report/export render their own panels.
+        if (tab && tab !== "StorageReport" && tab !== "Export") {
           this._activeTab = tab;
           this._slice = context?.getSlices()[tab];
         }

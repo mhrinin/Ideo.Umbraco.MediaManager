@@ -31,7 +31,7 @@ public sealed class OrphanedFileScanner(
         }
 
         var candidates = new List<FileCandidate>();
-        foreach (var relativePath in WalkFiles(fileSystem, string.Empty, cancellationToken))
+        foreach (var relativePath in MediaFileWalker.Walk(fileSystem, cancellationToken))
         {
             if (ownedPaths.Contains(NormalizeSeparators(relativePath)))
             {
@@ -42,28 +42,6 @@ public sealed class OrphanedFileScanner(
         }
 
         return Task.FromResult(new ScanResult(jobId, Type, [], candidates, candidates.Sum(candidate => candidate.SizeBytes)));
-    }
-
-    private static IEnumerable<string> WalkFiles(IFileSystem fileSystem, string path, CancellationToken cancellationToken)
-    {
-        foreach (var file in fileSystem.GetFiles(path))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            yield return file;
-        }
-
-        foreach (var directory in fileSystem.GetDirectories(path))
-        {
-            if (MediaScanLogic.IsCacheDirectory(directory))
-            {
-                continue;
-            }
-
-            foreach (var file in WalkFiles(fileSystem, directory, cancellationToken))
-            {
-                yield return file;
-            }
-        }
     }
 
     private static string? ToRelativePath(IFileSystem fileSystem, string mediaPath)
