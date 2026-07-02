@@ -1,7 +1,7 @@
 # Ideo.Umbraco.MediaManager (Umbraco 13 line)
 
 A safe media-cleanup extension for **Umbraco 13 (LTS)** — this branch (`v13/main`) ships the
-legacy-backoffice (AngularJS) edition. For **Umbraco 16/17** use the `main` branch / the `16.x`+
+legacy-backoffice (AngularJS) edition. For **Umbraco 16/17** use the `main` branch / the `17.x`
 package versions.
 
 Find and remove media that no longer belongs in your library — **unused media nodes** (no content
