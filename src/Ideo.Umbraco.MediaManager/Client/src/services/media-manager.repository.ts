@@ -77,12 +77,12 @@ export class MediaManagerRepository {
     return data ?? null;
   }
 
-  async deleteFiles(paths: string[], dryRun: boolean): Promise<CleanupResult | null> {
+  async deleteFiles(jobId: string, paths: string[], dryRun: boolean): Promise<CleanupResult | null> {
     const { data, error } = await tryExecute(
       this.host,
       umbHttpClient.post<CleanupResult>({
         url: `${this.apiBaseUrl}/cleanup/files`,
-        body: { paths, dryRun },
+        body: { jobId, paths, dryRun },
         security: [...BEARER],
       }),
     );

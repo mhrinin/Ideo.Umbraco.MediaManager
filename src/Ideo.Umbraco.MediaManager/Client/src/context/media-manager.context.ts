@@ -131,16 +131,18 @@ export class MediaManagerContext extends UmbControllerBase {
   }
 
   async deleteSelected(type: ScanType): Promise<void> {
-    const ids = this.#slices.getValue()[type].selected;
+    const slice = this.#slices.getValue()[type];
+    const ids = slice.selected;
     if (ids.length === 0) {
       return;
     }
 
     try {
-      // Orphaned files are physical files; every other scan targets media nodes.
+      // Orphaned files are physical files, validated server-side against the scan result
+      // identified by jobId; every other scan targets media nodes.
       const result =
         type === "OrphanedFiles"
-          ? await this.#repository.deleteFiles(ids, false)
+          ? await this.#repository.deleteFiles(slice.result?.jobId ?? "", ids, false)
           : await this.#repository.deleteMedia(ids, false);
 
       const affected = result?.affected ?? 0;

@@ -1,3 +1,4 @@
+using Ideo.Umbraco.MediaManager.Interfaces;
 using Ideo.Umbraco.MediaManager.Services;
 using Moq;
 using Umbraco.Cms.Core;
@@ -21,8 +22,9 @@ public class CleanupServiceTests
         var security = new Mock<IBackOfficeSecurityAccessor>();
         security.SetupGet(s => s.BackOfficeSecurity).Returns((IBackOfficeSecurity?)null);
 
-        // MediaFileManager is not used by DeleteMediaAsync, so it is safe to pass null here.
-        var service = new CleanupService(editing.Object, null!, audit.Object, security.Object);
+        // MediaFileManager is not used by DeleteMediaAsync (nor by the unknown-job DeleteFiles
+        // path), so it is safe to pass null here.
+        var service = new CleanupService(editing.Object, null!, audit.Object, security.Object, new Mock<IScanJobManager>().Object);
         return (service, editing, audit);
     }
 
@@ -74,6 +76,20 @@ public class CleanupServiceTests
             .ReturnsAsync(Attempt.FailWithStatus<IMedia, ContentEditingOperationStatus>(ContentEditingOperationStatus.NotFound, null!));
 
         var result = await service.DeleteMediaAsync([key], dryRun: false);
+
+        Assert.Equal(0, result.Affected);
+        Assert.Single(result.Errors);
+        audit.Verify(a => a.AddAsync(It.IsAny<AuditType>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteFiles_UnknownJob_RefusesAndDeletesNothing()
+    {
+        // No scan result registered for the job id -> the server-side allowlist is unavailable
+        // and nothing may be deleted.
+        var (service, _, audit) = CreateService();
+
+        var result = await service.DeleteFilesAsync(Guid.NewGuid(), ["some/file.jpg"], dryRun: false);
 
         Assert.Equal(0, result.Affected);
         Assert.Single(result.Errors);

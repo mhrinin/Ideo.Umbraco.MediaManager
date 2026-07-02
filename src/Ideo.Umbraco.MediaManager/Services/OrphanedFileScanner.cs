@@ -20,13 +20,13 @@ public sealed class OrphanedFileScanner(
 
     public Task<IReadOnlyList<FileCandidate>> ScanAsync(IProgress<int>? progress, CancellationToken cancellationToken)
     {
-        var ownedPaths = CollectOwnedPaths(progress, cancellationToken);
         var fileSystem = mediaFileManager.FileSystem;
+        var ownedPaths = CollectOwnedPaths(fileSystem, progress, cancellationToken);
 
         var candidates = new List<FileCandidate>();
         foreach (var relativePath in WalkFiles(fileSystem, string.Empty, cancellationToken))
         {
-            if (ownedPaths.Contains(MediaScanLogic.NormalizeMediaPath(relativePath)))
+            if (ownedPaths.Contains(NormalizeSeparators(relativePath)))
             {
                 continue;
             }
@@ -37,9 +37,12 @@ public sealed class OrphanedFileScanner(
         return Task.FromResult<IReadOnlyList<FileCandidate>>(candidates);
     }
 
-    private HashSet<string> CollectOwnedPaths(IProgress<int>? progress, CancellationToken cancellationToken)
+    private HashSet<string> CollectOwnedPaths(IFileSystem fileSystem, IProgress<int>? progress, CancellationToken cancellationToken)
     {
-        var owned = new HashSet<string>();
+        // The filesystem itself resolves stored media URLs (e.g. "/media/xyz/f.jpg" — or a custom
+        // media root like "/assets/…") to its own relative paths, so owned and walked paths always
+        // agree regardless of the configured UmbracoMediaPath.
+        var owned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         long pageIndex = 0;
         long total;
         var processed = 0;
@@ -59,9 +62,10 @@ public sealed class OrphanedFileScanner(
 
             foreach (var entity in page)
             {
-                if (entity is IMediaEntitySlim media && !string.IsNullOrEmpty(media.MediaPath))
+                if (entity is IMediaEntitySlim media && !string.IsNullOrEmpty(media.MediaPath)
+                    && ToRelativePath(fileSystem, media.MediaPath) is { } relativePath)
                 {
-                    owned.Add(MediaScanLogic.NormalizeMediaPath(media.MediaPath));
+                    owned.Add(NormalizeSeparators(relativePath));
                 }
 
                 processed++;
@@ -74,6 +78,20 @@ public sealed class OrphanedFileScanner(
 
         return owned;
     }
+
+    private static string? ToRelativePath(IFileSystem fileSystem, string mediaPath)
+    {
+        try
+        {
+            return fileSystem.GetRelativePath(mediaPath);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string NormalizeSeparators(string path) => path.Replace('\\', '/');
 
     private static IEnumerable<string> WalkFiles(IFileSystem fileSystem, string path, CancellationToken cancellationToken)
     {
