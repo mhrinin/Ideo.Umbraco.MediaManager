@@ -46,7 +46,13 @@
         <umb-box-content>
             <umb-load-indicator ng-if="vm.activeSlice().state === 'scanning'"></umb-load-indicator>
 
-            <div ng-if="vm.activeSlice().state !== 'scanning'">
+            <div class="media-manager__failed" ng-if="vm.activeSlice().state === 'failed'">
+                <umb-icon icon="icon-alert"></umb-icon>
+                <span>The scan failed.</span>
+                <umb-button type="button" button-style="outline" label="Retry" action="vm.retryActive()"></umb-button>
+            </div>
+
+            <div ng-if="vm.activeSlice().state === 'done'">
                 <div class="media-manager__toolbar">
                     <span>{{ vm.count(vm.activeTab) }} item(s)</span>
                     <umb-button type="button"
@@ -66,7 +72,7 @@
                 </div>
 
                 <div class="media-manager__empty" ng-if="vm.count(vm.activeTab) === 0">
-                    Nothing to clean up here. &#127881;
+                    <umb-icon icon="icon-check"></umb-icon> Nothing to clean up here.
                 </div>
 
                 <table class="media-manager__table" ng-if="vm.count(vm.activeTab) > 0">
@@ -97,21 +103,26 @@
     <div ng-if="vm.activeTab === 'StorageReport'">
         <umb-box>
             <umb-box-content>
-                <umb-load-indicator ng-if="vm.reportLoading"></umb-load-indicator>
-                <div ng-if="!vm.reportLoading && vm.report">
-                    <div class="media-manager__total">{{ vm.formatBytes(vm.report.totalBytes) }}</div>
-                    <div class="media-manager__card-desc">across {{ vm.report.totalCount }} media files</div>
+                <umb-load-indicator ng-if="vm.slices.StorageReport.state === 'scanning' || vm.slices.StorageReport.state === 'idle'"></umb-load-indicator>
+                <div class="media-manager__failed" ng-if="vm.slices.StorageReport.state === 'failed'">
+                    <umb-icon icon="icon-alert"></umb-icon>
+                    <span>The report could not be generated.</span>
+                    <umb-button type="button" button-style="outline" label="Retry" action="vm.retryActive()"></umb-button>
+                </div>
+                <div ng-if="vm.slices.StorageReport.state === 'done'">
+                    <div class="media-manager__total">{{ vm.formatBytes(vm.slices.StorageReport.report.totalBytes) }}</div>
+                    <div class="media-manager__card-desc">across {{ vm.slices.StorageReport.report.totalCount }} media files</div>
                 </div>
             </umb-box-content>
         </umb-box>
 
-        <umb-box ng-if="!vm.reportLoading && vm.report">
+        <umb-box ng-if="vm.slices.StorageReport.state === 'done'">
             <umb-box-header title="By media type"></umb-box-header>
             <umb-box-content>
                 <table class="media-manager__table">
                     <thead><tr><th>Media type</th><th>Items</th><th class="media-manager__size">Size</th></tr></thead>
                     <tbody>
-                        <tr ng-repeat="row in vm.report.byType">
+                        <tr ng-repeat="row in vm.slices.StorageReport.report.byType">
                             <td><umb-icon icon="{{row.icon}}"></umb-icon> {{ row.typeAlias }}</td>
                             <td>{{ row.count }}</td>
                             <td class="media-manager__size">{{ vm.formatBytes(row.bytes) }}</td>
@@ -121,13 +132,13 @@
             </umb-box-content>
         </umb-box>
 
-        <umb-box ng-if="!vm.reportLoading && vm.report">
+        <umb-box ng-if="vm.slices.StorageReport.state === 'done'">
             <umb-box-header title="Largest files"></umb-box-header>
             <umb-box-content>
                 <table class="media-manager__table">
                     <thead><tr><th>Name</th><th>Path</th><th class="media-manager__size">Size</th></tr></thead>
                     <tbody>
-                        <tr ng-repeat="item in vm.report.largest">
+                        <tr ng-repeat="item in vm.slices.StorageReport.report.largest">
                             <td>{{ item.name }}</td>
                             <td class="media-manager__path">{{ item.path }}</td>
                             <td class="media-manager__size">{{ vm.formatBytes(item.sizeBytes) }}</td>

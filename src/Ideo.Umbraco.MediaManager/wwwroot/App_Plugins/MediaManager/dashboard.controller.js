@@ -15,25 +15,32 @@
         { key: "OrphanedFiles", label: "Orphaned files", icon: "icon-document", desc: "Files on disk with no matching media item.", isMedia: false }
     ];
 
+    var POLL_INTERVAL_MS = 1000;
+    // Job state is in-memory server-side; this many consecutive missing statuses means the job
+    // was lost (app restart) and polling must stop instead of retrying forever.
+    var MAX_MISSING_STATUS = 5;
+
     function DashboardController($scope, $q, $timeout, mediaManagerResource, notificationsService, overlayService, editorService) {
         var vm = this;
+        var destroyed = false;
+        var pollTimeouts = {};
 
         vm.tabs = SCAN_TABS;
         vm.activeTab = "UnusedMedia";
         vm.scanning = false;
-        vm.report = null;
-        vm.reportLoading = false;
         vm.formatBytes = formatBytes;
 
         vm.slices = {};
         SCAN_TABS.forEach(function (t) {
-            vm.slices[t.key] = { items: [], reclaimable: 0, state: "idle" };
+            vm.slices[t.key] = { items: [], reclaimable: 0, state: "idle", jobId: null };
         });
+        vm.slices.StorageReport = { report: null, state: "idle" };
 
         vm.setTab = setTab;
         vm.count = count;
         vm.reclaimable = reclaimable;
         vm.rescan = scanAll;
+        vm.retryActive = function () { runScan(vm.activeTab); };
         vm.toggleAll = toggleAll;
         vm.allSelected = allSelected;
         vm.anySelected = anySelected;
@@ -41,7 +48,13 @@
         vm.openMedia = openMedia;
         vm.activeSlice = function () { return vm.slices[vm.activeTab]; };
         vm.isMediaTab = function () { return vm.activeTab !== "OrphanedFiles"; };
-        vm.rowId = function (item) { return vm.isMediaTab() ? item.key : item.path; };
+
+        $scope.$on("$destroy", function () {
+            destroyed = true;
+            Object.keys(pollTimeouts).forEach(function (key) {
+                if (pollTimeouts[key]) { $timeout.cancel(pollTimeouts[key]); }
+            });
+        });
 
         activate();
 
@@ -51,59 +64,93 @@
             var deferred = $q.defer();
             mediaManagerResource.startScan(type).then(function (res) {
                 var jobId = res.jobId;
+                var missingStatus = 0;
+
                 function poll() {
+                    if (destroyed) { deferred.reject("destroyed"); return; }
                     mediaManagerResource.getStatus(jobId).then(function (status) {
-                        var state = (status && status.state ? String(status.state) : "").toLowerCase();
+                        missingStatus = 0;
+                        var state = status && status.state ? String(status.state).toLowerCase() : "";
                         if (state === "completed") {
                             mediaManagerResource.getResult(jobId).then(deferred.resolve, deferred.reject);
                         } else if (state === "failed" || state === "cancelled") {
                             deferred.reject(status);
                         } else {
-                            $timeout(poll, 1000);
+                            schedule();
                         }
-                    }, function () { $timeout(poll, 1000); });
+                    }, function () {
+                        // Missing job (404 after app restart) or transient error: cap the retries.
+                        if (++missingStatus >= MAX_MISSING_STATUS) {
+                            deferred.reject("lost");
+                        } else {
+                            schedule();
+                        }
+                    });
                 }
-                poll();
+
+                function schedule() {
+                    if (destroyed) { deferred.reject("destroyed"); return; }
+                    pollTimeouts[type] = $timeout(poll, POLL_INTERVAL_MS);
+                }
+
+                schedule();
             }, deferred.reject);
             return deferred.promise;
         }
 
+        function runScan(type) {
+            var slice = vm.slices[type];
+            if (slice.state === "scanning") { return $q.resolve(); }
+            slice.state = "scanning";
+
+            if (type === "StorageReport") {
+                return pollScan(type).then(function (result) {
+                    slice.report = result.report || null;
+                    slice.state = slice.report ? "done" : "failed";
+                }, function () {
+                    if (!destroyed) { slice.state = "failed"; }
+                });
+            }
+
+            var tab = null;
+            SCAN_TABS.forEach(function (t) { if (t.key === type) { tab = t; } });
+            return pollScan(type).then(function (result) {
+                slice.items = (tab.isMedia ? result.media : result.files) || [];
+                slice.reclaimable = result.reclaimableBytes || 0;
+                slice.jobId = result.jobId;
+                slice.state = "done";
+            }, function () {
+                if (!destroyed) {
+                    slice.items = [];
+                    slice.jobId = null;
+                    slice.state = "failed";
+                }
+            });
+        }
+
         function scanAll() {
             vm.scanning = true;
-            var promises = SCAN_TABS.map(function (t) {
-                vm.slices[t.key].state = "scanning";
-                return pollScan(t.key).then(function (result) {
-                    vm.slices[t.key].items = (t.isMedia ? result.media : result.files) || [];
-                    vm.slices[t.key].reclaimable = result.reclaimableBytes || 0;
-                    vm.slices[t.key].state = "done";
-                }, function () {
-                    vm.slices[t.key].items = [];
-                    vm.slices[t.key].state = "failed";
-                });
-            });
-            $q.all(promises).finally(function () {
+            var types = SCAN_TABS.map(function (t) { return t.key; });
+            // Refresh the storage report too once it has been loaded, so it never shows stale totals.
+            if (vm.slices.StorageReport.state !== "idle") {
+                types.push("StorageReport");
+            }
+            $q.all(types.map(runScan)).finally(function () {
                 vm.scanning = false;
-                if (vm.report || vm.activeTab === "StorageReport") { loadReport(true); }
             });
         }
 
         function setTab(key) {
             vm.activeTab = key;
-            if (key === "StorageReport" && !vm.report && !vm.reportLoading) { loadReport(false); }
-        }
-
-        function loadReport(force) {
-            if (vm.reportLoading) { return; }
-            if (vm.report && !force) { return; }
-            vm.reportLoading = true;
-            mediaManagerResource.storageReport().then(function (report) {
-                vm.report = report;
-            }).finally(function () { vm.reportLoading = false; });
+            // The storage report is loaded lazily, the first time its tab is opened.
+            if (key === "StorageReport" && vm.slices.StorageReport.state === "idle") {
+                runScan("StorageReport");
+            }
         }
 
         function count(key) {
             var slice = vm.slices[key];
-            return slice ? slice.items.length : 0;
+            return slice && slice.items ? slice.items.length : 0;
         }
 
         function reclaimable() {
@@ -138,6 +185,7 @@
             var ids = selectedIds();
             if (!ids.length) { return; }
             var isFiles = vm.activeTab === "OrphanedFiles";
+            var jobId = vm.activeSlice().jobId;
             overlayService.confirmDelete({
                 title: "Delete " + ids.length + " item(s)",
                 content: isFiles
@@ -147,7 +195,7 @@
                 submit: function () {
                     overlayService.close();
                     var op = isFiles
-                        ? mediaManagerResource.deleteFiles(ids, false)
+                        ? mediaManagerResource.deleteFiles(jobId, ids, false)
                         : mediaManagerResource.deleteMedia(ids, false);
                     op.then(function (result) {
                         var affected = (result && result.affected) || 0;
@@ -158,6 +206,8 @@
                             notificationsService.success("Media Manager", affected + " item(s) processed.");
                         }
                         scanAll();
+                    }, function () {
+                        notificationsService.error("Media Manager", "Delete failed.");
                     });
                 },
                 close: function () { overlayService.close(); }

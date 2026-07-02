@@ -35,26 +35,6 @@ public class MediaScanLogicTests
         Assert.False(MediaScanLogic.IsUnusedMedia(100, filePath, trashed: false, new HashSet<int>()));
     }
 
-    [Theory]
-    [InlineData("/media/1071/Kitten.JPG", "1071/kitten.jpg")]
-    [InlineData("1071\\file.PNG", "1071/file.png")]
-    [InlineData("media/abc/x.gif", "abc/x.gif")]
-    [InlineData("/abc/y.webp", "abc/y.webp")]
-    public void NormalizeMediaPath_NormalizesConsistently(string input, string expected)
-    {
-        Assert.Equal(expected, MediaScanLogic.NormalizeMediaPath(input));
-    }
-
-    [Fact]
-    public void NormalizeMediaPath_OwnedAndFilesystemPaths_Match()
-    {
-        // A stored media path ("/media/1071/file.jpg") and the filesystem-relative path
-        // ("1071/file.jpg") must normalize to the same key so owned files are excluded.
-        Assert.Equal(
-            MediaScanLogic.NormalizeMediaPath("/media/1071/file.jpg"),
-            MediaScanLogic.NormalizeMediaPath("1071/file.jpg"));
-    }
-
     [Fact]
     public void ExtractMediaKeys_UdiForm_ReturnsKey()
     {

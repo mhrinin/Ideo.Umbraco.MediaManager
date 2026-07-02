@@ -37,11 +37,8 @@
             deleteMedia: function (keys, dryRun) {
                 return handle($http.post(base + "DeleteMedia", { keys: keys, dryRun: dryRun }), "Failed to delete media");
             },
-            deleteFiles: function (paths, dryRun) {
-                return handle($http.post(base + "DeleteFiles", { paths: paths, dryRun: dryRun }), "Failed to delete files");
-            },
-            storageReport: function () {
-                return handle($http.get(base + "StorageReport"), "Failed to generate storage report");
+            deleteFiles: function (jobId, paths, dryRun) {
+                return handle($http.post(base + "DeleteFiles", { jobId: jobId, paths: paths, dryRun: dryRun }), "Failed to delete files");
             }
         };
     }

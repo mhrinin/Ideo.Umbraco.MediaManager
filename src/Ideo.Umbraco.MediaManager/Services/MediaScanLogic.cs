@@ -53,18 +53,6 @@ public static partial class MediaScanLogic
     public static bool IsUnusedMedia(int mediaId, string? filePath, bool trashed, ISet<int> referencedMediaIds)
         => !trashed && !string.IsNullOrEmpty(filePath) && !referencedMediaIds.Contains(mediaId);
 
-    /// <summary>Normalizes a media path for comparison: forward slashes, no leading slash or "media/" prefix, lower-cased.</summary>
-    public static string NormalizeMediaPath(string path)
-    {
-        var normalized = path.Replace('\\', '/').TrimStart('/').ToLowerInvariant();
-        if (normalized.StartsWith("media/", StringComparison.Ordinal))
-        {
-            normalized = normalized["media/".Length..];
-        }
-
-        return normalized;
-    }
-
     /// <summary>The ImageSharp/media cache directory holds regenerable variants and must never be treated as orphaned.</summary>
     public static bool IsCacheDirectory(string directory)
     {

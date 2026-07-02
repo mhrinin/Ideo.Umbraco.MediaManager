@@ -15,17 +15,16 @@ namespace Ideo.Umbraco.MediaManager.Controllers;
 /// anti-forgery token on every action; the whole API additionally requires Media section access, and
 /// physical file deletion (irreversible) requires Settings section access, mirroring the v16/17 line.
 /// </summary>
-[PluginController("MediaManager")]
+[PluginController(Constants.PluginName)]
 [Authorize(Policy = AuthorizationPolicies.SectionAccessMedia)]
 public sealed class MediaManagerController(
     IScanJobManager scanJobManager,
-    ICleanupService cleanupService,
-    IStorageReportService storageReportService) : UmbracoAuthorizedJsonController
+    ICleanupService cleanupService) : UmbracoAuthorizedJsonController
 {
     [HttpPost]
     public IActionResult StartScan(ScanType type)
         => Enum.IsDefined(type)
-            ? Ok(new { jobId = scanJobManager.StartScan(type) })
+            ? Ok(new StartScanResponse(scanJobManager.StartScan(type)))
             : BadRequest($"Unknown scan type '{type}'.");
 
     [HttpGet]
@@ -52,9 +51,5 @@ public sealed class MediaManagerController(
     [HttpPost]
     [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
     public async Task<IActionResult> DeleteFiles([FromBody] DeleteFilesRequest request)
-        => Ok(await cleanupService.DeleteFilesAsync(request.Paths, request.DryRun));
-
-    [HttpGet]
-    public async Task<IActionResult> StorageReport(CancellationToken cancellationToken)
-        => Ok(await storageReportService.GenerateAsync(null, cancellationToken));
+        => Ok(await cleanupService.DeleteFilesAsync(request.JobId, request.Paths, request.DryRun));
 }
