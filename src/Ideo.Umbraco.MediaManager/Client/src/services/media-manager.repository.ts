@@ -72,6 +72,18 @@ export class MediaManagerRepository {
     return data ?? null;
   }
 
+  async getLatestResult(type: ScanType, signal?: AbortSignal): Promise<ScanResultSummary | null> {
+    const { data } = await tryExecute(
+      this.host,
+      umbHttpClient.get<ScanResultSummary>({
+        url: `${this.apiBaseUrl}/scan/latest?type=${type}`,
+        security: [...BEARER],
+      }),
+      { disableNotifications: true, abortSignal: signal },
+    );
+    return data ?? null;
+  }
+
   async getResultItems(
     jobId: string,
     skip: number,

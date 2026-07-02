@@ -41,6 +41,10 @@ public class ScanApiController(IScanJobManager jobManager) : MediaManagerApiCont
         return Ok(new ScanResultItems(result.Items.Count, [.. result.Items.Skip(skip).Take(take)]));
     }
 
+    [HttpGet("scan/latest")]
+    public IActionResult GetLatestResult([FromQuery] ScanType type)
+        => jobManager.GetLatestResult(type) is { } result ? Ok(ScanResultSummary.From(result)) : NotFound();
+
     [HttpGet("scan/reclaimable")]
     public IActionResult GetReclaimableBytes()
         => Ok(new ReclaimableSpaceResponse(MediaScanLogic.ComputeReclaimableBytes(

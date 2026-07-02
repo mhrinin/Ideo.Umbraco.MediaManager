@@ -90,6 +90,19 @@ export class MediaManagerContext extends UmbControllerBase {
     if (tab === "StorageReport" && this.#slices.getValue().StorageReport.state === "idle") {
       this.scan("StorageReport");
     }
+    // The finished export outlives page loads on the server; restore it instead of making the
+    // user rebuild a possibly huge zip that is still available.
+    if (tab === "Export" && this.#slices.getValue().Export.state === "idle") {
+      void this.#restoreExport();
+    }
+  }
+
+  async #restoreExport(): Promise<void> {
+    const summary = await this.#repository.getLatestResult("Export");
+    // Re-check: the user may have started a new export while this was in flight.
+    if (summary?.export && this.#slices.getValue().Export.state === "idle") {
+      this.#patch("Export", { state: "done", result: summary });
+    }
   }
 
   setSelection(type: ScanType, selected: string[]): void {
