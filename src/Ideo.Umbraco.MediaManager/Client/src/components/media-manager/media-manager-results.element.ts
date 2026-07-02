@@ -228,7 +228,7 @@ export class MediaManagerResultsElement extends UmbLitElement {
         <div class="toolbar">
           <span class="summary">${this.#renderSummary(slice)}</span>
           <div class="actions">
-            ${total > PAGE_SIZE && !slice.allSelected
+            ${!slice.allSelected && selectedCount < total
               ? html`
                   <uui-button
                     look="secondary"
