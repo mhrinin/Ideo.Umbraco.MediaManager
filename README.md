@@ -1,7 +1,8 @@
 # Ideo.Umbraco.MediaManager
 
 A safe, async media-cleanup extension for **Umbraco 16 & 17** (new backoffice / Management API).
-For **Umbraco 13 (LTS)** use the `13.x` package versions, built from the `v13/main` branch.
+For **Umbraco 13 (LTS)** use the `13.x` package versions (`v13/main` branch); for **Umbraco 10**
+use `10.x` (`v10/main` branch).
 
 Find and remove media that no longer belongs in your library — **unused media nodes** (no content
 references anywhere), **duplicates** (byte-identical files), **broken media** (nodes whose file is
@@ -31,6 +32,7 @@ report** (totals, breakdown by type, largest files) — without the risk that ma
 | --- | --- | --- |
 | `17.x` (this branch) | 16.x or 17.x | 9 / 10 |
 | `13.x` (`v13/main` branch) | 13.x (LTS) | 8 |
+| `10.x` (`v10/main` branch) | 10.x | 6 |
 
 The `17.x` package multi-targets: an Umbraco 16 site gets the net9.0 assembly, an Umbraco 17 site
 the net10.0 one — same package, correct dependencies either way.
