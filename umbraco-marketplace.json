@@ -1,0 +1,34 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "Category": "Developer Tools",
+  "AlternateCategory": "Editor Tools",
+  "PackageType": "Package",
+  "LicenseTypes": [ "Free" ],
+  "Tags": [ "Media", "Cleanup", "DAM", "Maintenance", "Orphaned files" ],
+  "Screenshots": [
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/mhrinin/Our.Umbraco.MediaManager/main/docs/screenshots/01-overview-unused.png",
+      "Caption": "Dashboard overview — unused media, duplicates, broken media, orphaned files and reclaimable space at a glance."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/mhrinin/Our.Umbraco.MediaManager/main/docs/screenshots/02-duplicates.png",
+      "Caption": "Duplicate detection — byte-identical files grouped for safe cleanup."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/mhrinin/Our.Umbraco.MediaManager/main/docs/screenshots/03-broken.png",
+      "Caption": "Broken media — nodes whose underlying file is missing on disk."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/mhrinin/Our.Umbraco.MediaManager/main/docs/screenshots/04-orphaned.png",
+      "Caption": "Orphaned files — files on disk with no media node, removed via a validated action."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/mhrinin/Our.Umbraco.MediaManager/main/docs/screenshots/05-storage-report.png",
+      "Caption": "Storage report — totals, breakdown by media type and the largest files."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/mhrinin/Our.Umbraco.MediaManager/main/docs/screenshots/06-export.png",
+      "Caption": "Media export — a resumable ZIP of the whole media library for environment migration."
+    }
+  ]
+}

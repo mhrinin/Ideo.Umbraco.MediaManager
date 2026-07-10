@@ -6,6 +6,8 @@ library, without ever deleting anything that's still in use.
 Built for the new backoffice (**Umbraco 16 & 17**), with maintained packages for **13 (LTS)**
 and **10**.
 
+![Media Manager dashboard](https://raw.githubusercontent.com/mhrinin/Our.Umbraco.MediaManager/main/docs/screenshots/01-overview-unused.png)
+
 ## What it finds
 
 - **Unused media** — nodes with no content references anywhere

@@ -34,8 +34,11 @@ export class MediaManagerStatCardElement extends UmbLitElement {
     css`
       :host {
         display: block;
+        height: 100%;
       }
       uui-box {
+        height: 100%;
+        box-sizing: border-box;
         --uui-box-default-padding: var(--uui-size-space-5);
       }
       .value {
