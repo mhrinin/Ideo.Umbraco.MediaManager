@@ -10,7 +10,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # required to create the GitHub Release
       id-token: write # required for OIDC / NuGet Trusted Publishing
     steps:
       - uses: actions/checkout@v4
@@ -45,3 +45,8 @@ jobs:
           --source https://api.nuget.org/v3/index.json
           --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
           --skip-duplicate
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" artifacts/*.nupkg --title "$GITHUB_REF_NAME" --generate-notes
